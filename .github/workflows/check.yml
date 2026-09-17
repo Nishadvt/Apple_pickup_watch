@@ -1,1 +1,34 @@
+name: Apple pickup check
 
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore alert state
+        uses: actions/cache@v4
+        with:
+          path: state
+          key: pickup-state-${{ github.run_id }}
+          restore-keys: |
+            pickup-state-
+
+      - name: Check Apple pickup availability
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          LOCATIONS: "Dubai,Abu Dhabi"
+          PARTS: "MJX74AH/A,MJX74AE/A"
+        run: python check.py
